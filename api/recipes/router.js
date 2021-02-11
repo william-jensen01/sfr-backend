@@ -3,56 +3,48 @@ const Recipes = require('./model');
 
 const router = express.Router();
 
-router.get('/', async (req, res, next) => {
+router.get('/', async (req, res) => {
     try {
         const recipes = await Recipes.getAll();
         res.status(200).json(recipes);
     } catch (err) {
-        next(err);
+        res.status(500).json({ message: "error while getting recipes" })
     }
 });
 
-router.get('/:id', checkId, async (req, res, next) => {
+router.get('/:id', checkId, async (req, res) => {
     try {
         res.status(200).json(req.recipe);
     } catch (err) {
-        next(err);
+        res.status(500).json({ message: "error while getting specified recipe" })
     }
 });
 
-router.post('/', checkPayload, async (req, res, next) => {
+router.post('/', checkPayload, async (req, res) => {
     try {
         const newRecipe = await Recipes.add(req.body);
         res.status(201).json(newRecipe);
     } catch (err) {
-        err.message = "failed to add recipe";
-        next(err);
+        res.status(500).json({ message: "error while adding new recipe" })
     }
 });
 
-router.put('/:id', checkId, checkPayload, async (req, res, next) => {
+router.put('/:id', checkId, checkPayload, async (req, res) => {
     try {
         const updatedRecipe = Recipes.update(req.params.id, req.body);
         res.status(200).json(updatedRecipe);
     } catch (err) {
-        err.message = "failed to change recipe";
-        next(err);
+        res.status(500).json({ message: "error while updating recipe" })
     }
 });
 
-router.delete('/:id', checkId, async (req, res, next) => {
+router.delete('/:id', checkId, async (req, res) => {
     try {
         const data = await Recipes.remove(req.params.id);
         res.status(200).json({ removed: data});
     } catch (err) {
-        err.message = "failed to delete recipe";
-        next(err);
+        res.status(500).json({ message: "error while deleting recipe" })
     }
-});
-
-router.use((err, req, res, next) => {
-    err.statusCode = err.statusCode ? err.statusCode : 500;
-    res.status(err.statusCode).json({ message: err.message, stack: err.stack });
 });
 
 async function checkId(req, res, next) {
@@ -75,10 +67,8 @@ async function checkId(req, res, next) {
 
 async function checkPayload(req, res, next) {
     const body = req.body;
-    if (!body.recipe_name || !body.ingredients || !body.directions) {
-        err.message = 'body must include "recipe_name", "ingredients", "directions"';
-        err.statusCode = 400;
-        next(err);
+    if (!body.recipe_name || !body.category || !body.source || !body.ingredients || !body.instructions) {
+        res.status(400).json({ message: "please check info" })
     } else {
         next();
     }
